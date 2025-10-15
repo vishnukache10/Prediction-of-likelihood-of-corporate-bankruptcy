@@ -1,0 +1,869 @@
+---
+title: "vishnu"
+author: "Vishnu kacha"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+
+```{r}
+library(readxl)
+library(writexl)
+library(dplyr)
+library(openxlsx)
+library(MatchIt)
+library(magrittr)
+```
+
+
+```{r}
+data4 <- read.csv('/Users/vishnukache/Downloads/in97zioytklfhcvl.csv')
+```
+
+```{r}
+head(data4)
+```
+
+
+
+```{r}
+data4 <- rename(data4,Quarterly_total_current_assets = actq,
+                    Quarterly_total_Noncurrent_assets = ancq,
+                    Quarterly_total_assets = atq,
+                    Quarterly_total_common_equity = ceqq,
+                    Quarterly_cash_holdings = chq,
+                    Quarterly_Cost_of_goods_sold = cogsq,
+                    Quarterly_common_shares_outstanding = cshoq,
+                    Quarterly_total_Longterm_debt = dlttq,
+                    Quarterly_depreciation = dpq,
+                    Quarterly_total_current_liabilities = lctq,
+                    Quarterly_total_longterm_liabilities = lltq,
+                    Quarterly_Total_liabilities = ltq,
+                    Quarterly_Net_income = niq,
+                    Quarterly_Operating_earnings_pershare_excluding_extraordinaryitems = oepsxq,
+                    Quarterly_operating_income_before_depreciation = oibdpq,
+                    Quarterly_total_Retained_earnings = req,
+                    Quarterly_total_revenue = revtq,
+                    Quarterly_total_interest_expense = tieq,
+                    Quarterly_total_investment_income = tiiq,
+                    Quarterly_taxes_total = txtq,
+                    Quarterly_unconsolidated_earnings = uceqq,
+                    Quarterly_unrealized_gainson_investments = ugiq,
+                    Quarterly_Working_capital = wcapq,
+                    Quarterly_operating_expenses = xoprq,
+                    Yearly_capital_expenditures = capxy,
+                    Yearly_CoGS = cogsy,
+                    Yearly_net_income = niy,
+                    Yearly_total_revenue = revty,
+                    Yearly_operating_expenses = xopry,
+                    Yearly_RD_expenses = xrdy,
+                    Yearly_SGA_expenses = xsgay,
+                    Stock_exchange_identifier = exchg,
+                    Company_status = costat,
+                    Quarterly_common_shares_traded = cshtrq,
+                    Quarterly_market_value_total = mkvaltq,
+                    Quarterly_closing_price = prccq,
+                    Quarterly_high_price = prchq,
+                    Quarterly_low_price = prclq,
+                    postal_code = addzip)
+```
+
+
+
+```{r}
+data4 <- data4 %>% select(datadate, cusip, conm, datacqtr, datafqtr, Quarterly_total_current_assets, Quarterly_total_Noncurrent_assets, Quarterly_total_assets, Quarterly_total_common_equity, Quarterly_cash_holdings, Quarterly_Cost_of_goods_sold, Quarterly_common_shares_outstanding, Quarterly_total_Longterm_debt, Quarterly_depreciation, epspiq, Quarterly_total_current_liabilities, Quarterly_total_longterm_liabilities, Quarterly_Total_liabilities,  Quarterly_Net_income,Quarterly_common_shares_traded,Quarterly_closing_price, naics, Quarterly_total_Retained_earnings, Quarterly_Working_capital, Quarterly_total_revenue )
+```
+
+
+
+```{r}
+data4_clean <- data4[!is.na(data4$Quarterly_closing_price), ]
+```
+
+
+```{r}
+library(scales)
+library(data.table)
+# Handle both character and numeric columns with empty strings
+data4_clean <- data4_clean %>%
+  mutate(across(where(is.character), ~ na_if(., ""))) %>% # Replace empty strings with NA in character columns
+  mutate(across(where(is.numeric), ~ ifelse(is.na(.) | . == 0, NA, .))) # Handle numeric edge cases
+
+head(data4_clean)
+
+# Total number of NA values in the entire dataframe
+sum(is.na(data4_clean))
+
+# Calculate the percentage of complete cases in the dataset
+percent(sum(complete.cases(data4_clean)) / nrow(data4_clean), accuracy = 0.01)
+
+
+# Summarize NA values per column and calculate their percentages
+na_counts <- colSums(is.na(data4_clean))
+na_percentage <- percent(na_counts / nrow(data4_clean), accuracy = 0.01)
+na_summary <- data.frame(Variable = names(na_counts), NA_Counts = na_counts, NA_Percent = na_percentage)
+data.table(na_summary)
+```
+
+
+
+```{r}
+data4_clean <- data4_clean[!is.na(data4_clean$Quarterly_common_shares_traded), ]
+data4_clean <- data4_clean[!is.na(data4_clean$Quarterly_common_shares_outstanding), ]
+data4_clean <- data4_clean[!is.na(data4_clean$epspiq), ]
+
+
+
+
+
+library(scales)
+library(data.table)
+# Handle both character and numeric columns with empty strings
+data4_clean <- data4_clean %>%
+  mutate(across(where(is.character), ~ na_if(., ""))) %>% # Replace empty strings with NA in character columns
+  mutate(across(where(is.numeric), ~ ifelse(is.na(.) | . == 0, NA, .))) # Handle numeric edge cases
+
+head(data4_clean)
+
+# Total number of NA values in the entire dataframe
+sum(is.na(data4_clean))
+
+# Calculate the percentage of complete cases in the dataset
+percent(sum(complete.cases(data4_clean)) / nrow(data4_clean), accuracy = 0.01)
+
+
+# Summarize NA values per column and calculate their percentages
+na_counts <- colSums(is.na(data4_clean))
+na_percentage <- percent(na_counts / nrow(data4_clean), accuracy = 0.01)
+na_summary <- data.frame(Variable = names(na_counts), NA_Counts = na_counts, NA_Percent = na_percentage)
+data.table(na_summary)
+
+```
+
+
+```{r}
+# Base R
+data4_clean <- data4_clean[data4_clean$Quarterly_common_shares_traded > 100000, ]
+
+data4_clean
+
+```
+
+
+```{r}
+library(scales)
+library(data.table)
+# Handle both character and numeric columns with empty strings
+data4_clean <- data4_clean %>%
+  mutate(across(where(is.character), ~ na_if(., ""))) %>% # Replace empty strings with NA in character columns
+  mutate(across(where(is.numeric), ~ ifelse(is.na(.) | . == 0, NA, .))) # Handle numeric edge cases
+```
+
+
+```{r}
+
+# Total number of NA values in the entire dataframe
+sum(is.na(data4_clean))
+
+# Calculate the percentage of complete cases in the dataset
+percent(sum(complete.cases(data4_clean)) / nrow(data4_clean), accuracy = 0.01)
+
+
+# Summarize NA values per column and calculate their percentages
+na_counts <- colSums(is.na(data4_clean))
+na_percentage <- percent(na_counts / nrow(data4_clean), accuracy = 0.01)
+na_summary <- data.frame(Variable = names(na_counts), NA_Counts = na_counts, NA_Percent = na_percentage)
+data.table(na_summary)
+```
+
+
+```{r}
+library(dplyr)
+
+
+# Add -7.074151 to non-NA values in column A
+data4_clean <- data4_clean %>%
+  mutate(Quarterly_Net_income = ifelse(is.na(Quarterly_Net_income), (-7.074151) ,Quarterly_Net_income))
+
+data4_clean <- data4_clean %>%
+  mutate(Quarterly_Total_liabilities = ifelse(is.na(Quarterly_Total_liabilities), (9234.617) ,Quarterly_Total_liabilities))
+
+data4_clean <- data4_clean %>%
+  mutate(Quarterly_total_assets = ifelse(is.na(Quarterly_total_assets), (11265.66) ,Quarterly_total_assets))
+
+
+data4_clean <- data4_clean %>%
+  mutate(Quarterly_total_common_equity = ifelse(is.na(Quarterly_total_common_equity), (1851.41) ,Quarterly_total_common_equity))
+
+data4_clean <- data4_clean %>%
+  mutate(Quarterly_Cost_of_goods_sold = ifelse(is.na(Quarterly_Cost_of_goods_sold), (583.2995) ,Quarterly_Cost_of_goods_sold))
+
+
+
+data4_clean <- data4_clean %>%
+  mutate(Quarterly_depreciation = ifelse(is.na(Quarterly_depreciation), (50.87697) ,Quarterly_depreciation))
+
+
+
+print(data4_clean)
+
+summary(data4_clean)
+
+```
+
+#&&********************************************************************************
+
+
+```{r}
+clonmcheck <- c("datadate", "cusip", "conm", "datacqtr", "datafqtr", "Quarterly_total_current_assets", "Quarterly_total_Noncurrent_assets", "Quarterly_total_assets", "Quarterly_total_common_equity", "Quarterly_cash_holdings", "Quarterly_Cost_of_goods_sold", "Quarterly_common_shares_outstanding", "Quarterly_total_Longterm_debt", "Quarterly_depreciation", "epspiq", "Quarterly_total_current_liabilities", "Quarterly_total_longterm_liabilities", "Quarterly_Total_liabilities", "Quarterly_Net_income","Quarterly_common_shares_traded","Quarterly_closing_price", "naics","TotalDebt","TotalEquity","Debt_Equity","Debt_Asset")
+
+necount <- sapply(clonmcheck,function(col) {
+  if (col %in% colnames(data4_clean)) {  
+    sum(data4_clean[[col]] < 0, na.rm = TRUE)  # Count negative values
+  } else {
+    NA  # Return NA if column does not exist
+  }
+})
+
+necountdata <- data.frame(
+  Column = clonmcheck, 
+  Negative_Count = necount)
+print("Negative value counts for the specified columns:")
+print(necountdata)
+```
+
+
+#**********************************************************
+
+```{r}
+data4_clean$datadate <- as.Date(data4_clean$datadate, format = "%Y-%m-%d")
+```
+
+
+
+
+
+```{r}
+library(scales)
+library(data.table)
+# Handle both character and numeric columns with empty strings
+data4_clean <- data4_clean %>%
+  mutate(across(where(is.character), ~ na_if(., ""))) %>% # Replace empty strings with NA in character columns
+  mutate(across(where(is.numeric), ~ ifelse(is.na(.) | . == 0, NA, .))) # Handle numeric edge cases
+
+#head(data7)
+
+# Total number of NA values in the entire dataframe
+sum(is.na(data4_clean))
+
+# Calculate the percentage of complete cases in the dataset
+percent(sum(complete.cases(data4_clean)) / nrow(data4_clean), accuracy = 0.01)
+
+
+# Summarize NA values per column and calculate their percentages
+na_counts <- colSums(is.na(data4_clean))
+na_percentage <- percent(na_counts / nrow(data4_clean), accuracy = 0.01)
+na_summary <- data.frame(Variable = names(na_counts), NA_Counts = na_counts, NA_Percent = na_percentage)
+data.table(na_summary)
+
+summary(data4_clean)
+```
+
+
+```{r}
+# Remove rows with NA in either Quarterly_total_current_assets or Quarterly_total_current_liabilities
+data4_clean <- data4_clean %>%
+  filter(!is.na(Quarterly_total_current_assets) & !is.na(Quarterly_total_current_liabilities)) %>% 
+  mutate(Quarterly_current_liabilities_to_assets_ratio = Quarterly_total_current_liabilities / Quarterly_total_current_assets)
+
+data4_clean <- data4_clean %>%
+  filter(!is.na(Quarterly_Working_capital) & !is.na(Quarterly_total_assets)) %>% 
+  mutate(Quarterly_Working_capital_to_assets_ratio = Quarterly_Working_capital / Quarterly_total_assets)
+
+data4_clean <- data4_clean %>%
+  filter(!is.na(Quarterly_Net_income) & !is.na(Quarterly_total_assets)) %>% 
+  mutate(Quarterly_Net_income_to_assets_ratio = Quarterly_Net_income / Quarterly_total_assets)
+
+data4_clean <- data4_clean %>%
+  filter(!is.na(Quarterly_total_Retained_earnings) & !is.na(Quarterly_total_assets)) %>% 
+  mutate(Quarterly_total_Retained_earnings_to_assets_ratio = Quarterly_total_Retained_earnings / Quarterly_total_assets)
+
+data4_clean <- data4_clean %>%
+  filter(!is.na(Quarterly_Total_liabilities) & !is.na(Quarterly_total_common_equity)) %>% 
+  mutate(Quarterly_Total_liabilities_to_equity_ratio = Quarterly_Total_liabilities / Quarterly_total_common_equity)
+
+```
+
+#####********
+```{r}
+ratio_data <- function(data4_clean){
+  data4_clean %>%
+    mutate(
+      TotalDebt = Quarterly_Total_liabilities + Quarterly_total_Longterm_debt,
+      TotalEquity = Quarterly_total_assets - Quarterly_Total_liabilities ,
+      Debt_Equity_Ratio = TotalDebt/TotalEquity ,
+      Debt_Asset = TotalDebt/Quarterly_total_assets,
+      ROE = Quarterly_Net_income/(Quarterly_total_assets - Quarterly_Total_liabilities),
+      Equity_leverage_ratio = Quarterly_total_assets/TotalEquity,
+      Gross_profit_margin = (Quarterly_total_revenue-Quarterly_Cost_of_goods_sold)/Quarterly_total_revenue
+    )
+}
+
+data4_clean <- ratio_data(data4_clean)
+```
+
+
+```{r}
+# Step 1: Start with Net Income
+OCF <- data4_clean$Quarterly_Net_income
+
+# Step 2: Add back Depreciation (Non-cash expense)
+OCF <- OCF + data4_clean$Quarterly_depreciation
+
+# Step 3: Calculate Changes in Working Capital
+# Assuming working capital changes are represented by the change in current assets and current liabilities
+# (We can calculate Working Capital as: Current Assets - Current Liabilities)
+
+# Get the changes in Working Capital
+working_capital_change <- data4_clean$Quarterly_total_current_assets - data4_clean$Quarterly_total_current_liabilities
+
+# Add the change in working capital to OCF
+data4_clean$OCF <- OCF + working_capital_change
+
+head(data4_clean)
+```
+
+
+```{r}
+data4_clean <- data4_clean %>%
+  filter(!is.na(TotalDebt) & !is.na(OCF)) %>% 
+  mutate(Quarterly_debt_to_OCF_ratio = TotalDebt/OCF)
+```
+
+
+### fixed assets, asset tangibility, profitability, ROE, Debt to {OCF}cash flow ratio, equity leverage ratio
+
+```{r}
+head(data4_clean)
+```
+
+
+
+```{r}
+
+# Remove rows with Inf or -Inf in Quarterly_debt_to_OCF_ratio
+data4_clean <- data4_clean[!is.infinite(data4_clean$Gross_profit_margin), ]
+data4_clean <- data4_clean[!is.infinite(data4_clean$Equity_leverage_ratio), ]
+data4_clean <- data4_clean[!is.infinite(data4_clean$ROE), ]
+data4_clean <- data4_clean[!is.infinite(data4_clean$Quarterly_debt_to_OCF_ratio), ]
+data4_clean <- data4_clean[!is.infinite(data4_clean$Quarterly_total_Retained_earnings_to_assets_ratio), ]
+
+
+# Verify the changes
+summary(data4_clean$Gross_profit_margin)
+
+```
+
+
+```{r}
+
+naics <- read_excel("~/Downloads/Copy of unique_naics_conm.xlsx")
+head(naics)
+```
+
+```{r}
+
+library(tidyr)
+class(data4_clean$conm)
+class(naics$conm)
+data4_clean$conm <- as.character(data4_clean$conm)
+naics$conm <- as.character(naics$conm)
+
+
+data4_clean <- left_join(data4_clean,naics, by = "conm")
+
+data4_clean <- data4_clean %>%
+  mutate(Industry = replace_na(Industry, "Non-Classifiable"))
+
+#data4_clean <- data4_clean %>%
+ # filter(!is.na(Industry))
+
+
+```
+
+
+```{r}
+head(data4_clean)
+```
+
+
+
+```{r}
+data4_clean <- data4_clean %>%
+  mutate(
+    Quarterly_total_Retained_earnings = ifelse(is.na(Quarterly_total_Retained_earnings), 0, Quarterly_total_Retained_earnings),
+    Quarterly_total_common_equity = ifelse(is.na(Quarterly_total_common_equity), 0, Quarterly_total_common_equity),
+    Quarterly_Net_income = ifelse(is.na(Quarterly_Net_income), 0, Quarterly_Net_income)
+  )
+
+```
+
+
+#### Identify duplicate column names
+
+```{r}
+duplicated_columns <- which(duplicated(colnames(data4_clean)))
+if (length(duplicated_columns) > 0) {
+  cat("Duplicate columns found:", colnames(data4_clean)[duplicated_columns], "\n")
+} else {
+  cat("No duplicate columns found.\n")
+}
+
+```
+
+### remove duplicates
+
+```{r}
+data4_clean <- data4_clean[, !duplicated(colnames(data4_clean))]
+
+# Verify that duplicate columns are removed
+colnames(data4_clean)
+```
+
+
+```{r}
+# Define bankruptcy based on multiple conditions
+data4_clean <- data4_clean %>%
+  mutate(Bankruptcy = ifelse(Quarterly_total_Retained_earnings < 0 | 
+                             Quarterly_total_common_equity < 0 | 
+                             Quarterly_Net_income < 0, 1, 0))
+
+```
+
+
+######*************
+
+```{r}
+head(data4_clean)
+```
+
+```{r}
+ratios<- function(data4_clean){
+  data4_clean %>%
+    mutate(
+      TotalDebt = Quarterly_Total_liabilities + Quarterly_total_Longterm_debt,
+      TotalEquity = Quarterly_total_assets - Quarterly_Total_liabilities ,
+      Debt_Equity_Ratio = TotalDebt/TotalEquity ,
+      Debt_Asset = TotalDebt/Quarterly_total_assets,
+      Equity_leverage_ratio = Quarterly_total_assets/TotalEquity,
+      Current_ratio = Quarterly_total_current_assets/Quarterly_total_current_liabilities
+    )
+}
+nrow(ratios)
+```
+
+
+
+```{r}
+
+# Assuming ratio_data1 adds new columns to the dataset
+ratio_output <- ratios(data4_clean)
+
+# Combine the original dataset with the new columns
+data4_clean <- cbind(data4_clean, ratio_output)
+head(data4_clean)
+```
+
+
+###Part 2
+
+
+
+```{r}
+#write_xlsx(data4_clean2, path = "/Users/aj/Downloads/Data4_celan2.xlsx", col_names = TRUE)
+```
+
+
+
+###new colounm
+```{r}
+# Calculate Sales Growth
+data4_clean2 <- data4_clean %>%
+  arrange(conm, datadate) %>%  # Ensure data is sorted by company and date
+  group_by(conm) %>%  # Group by company
+  mutate(Sales_Growth_Percentage = (Quarterly_total_revenue - lag(Quarterly_total_revenue)) / 
+                                   lag(Quarterly_total_revenue) * 100) %>%
+  ungroup()
+
+# View results
+head(data4_clean2)
+
+```
+
+
+###filtering
+
+```{r}
+library(dplyr)
+library(zoo)
+
+# Sort and group the data
+data4_clean2 <- data4_clean2 %>%
+  arrange(conm, datadate) %>%  # Sort by company and date
+  group_by(conm) %>%  # Group by company
+  mutate(
+    # Check for 7 consecutive quarters for each variable
+    Retained_earnings_flag = rollapply(Quarterly_total_Retained_earnings < 0, width = 7, FUN = all, fill = FALSE, align = "right"),
+    Net_income_flag = rollapply(Quarterly_Net_income < 0, width = 7, FUN = all, fill = FALSE, align = "right"),
+    Common_equity_flag = rollapply(Quarterly_total_common_equity < 0, width = 7, FUN = all, fill = FALSE, align = "right"),
+    Working_capital_flag = rollapply(Quarterly_Working_capital < 0, width = 7, FUN = all, fill = FALSE, align = "right"),
+
+    # Create a single bankruptcy risk flag
+    Bankruptcy_risk_flag = Retained_earnings_flag | Net_income_flag | Common_equity_flag | Working_capital_flag
+  ) %>%
+  ungroup()
+
+```
+
+
+```{r}
+colnames(data4_clean2)
+```
+
+## companies with bankruptcy risk
+```{r}
+
+at_risk_companies <- data4_clean2 %>%
+  filter(Bankruptcy_risk_flag == TRUE)
+
+
+head(at_risk_companies)
+
+```
+
+##Analyze Companies at Risk
+
+```{r}
+# Filter companies with Bankruptcy_risk_flag = TRUE
+companies_at_risk <- data4_clean2 %>%
+  filter(Bankruptcy_risk_flag == TRUE)
+
+# View the top companies flagged as at risk
+head(companies_at_risk)
+
+# Count how many companies are flagged
+num_at_risk <- n_distinct(companies_at_risk$conm)
+cat("Number of at-risk companies:", num_at_risk)
+
+```
+
+
+##Group By Industry
+
+```{r}
+# Count at-risk companies by industry
+industry_risk_summary <- companies_at_risk %>%
+  group_by(Industry) %>%
+  summarise(Count = n_distinct(conm)) %>%
+  arrange(desc(Count))
+
+# View summary by industry
+head(industry_risk_summary)
+```
+
+##Visulaize
+
+
+```{r}
+library(ggplot2)
+
+# Bar chart of at-risk companies by industry
+ggplot(industry_risk_summary, aes(x = reorder(Industry, -Count), y = Count)) +
+  geom_bar(stat = "identity") +
+  coord_flip() +
+  labs(title = "Number of At-Risk Companies by Industry",
+       x = "Industry",
+       y = "Count of At-Risk Companies") +
+  theme_minimal()
+
+```
+
+
+##compare financial metrics of risk & non-risk
+
+
+```{r}
+# Summary of financial metrics for at-risk companies
+summary_at_risk <- at_risk_companies %>%
+  summarise(
+    Avg_Retained_Earnings = mean(Quarterly_total_Retained_earnings, na.rm = TRUE),
+    Avg_Net_Income = mean(Quarterly_Net_income, na.rm = TRUE),
+    Avg_Common_Equity = mean(Quarterly_total_common_equity, na.rm = TRUE),
+    Avg_Working_Capital = mean(Quarterly_Working_capital, na.rm = TRUE)
+  )
+
+# Summary of financial metrics for non-at-risk companies
+summary_non_risk <- data4_clean2 %>%
+  filter(Bankruptcy_risk_flag == FALSE) %>%
+  summarise(
+    Avg_Retained_Earnings = mean(Quarterly_total_Retained_earnings, na.rm = TRUE),
+    Avg_Net_Income = mean(Quarterly_Net_income, na.rm = TRUE),
+    Avg_Common_Equity = mean(Quarterly_total_common_equity, na.rm = TRUE),
+    Avg_Working_Capital = mean(Quarterly_Working_capital, na.rm = TRUE)
+  )
+
+
+```
+
+# Compare summaries
+
+```{r}
+summary_at_risk
+
+```
+
+
+```{r}
+summary_non_risk
+```
+
+
+
+##slpit data into training & testing
+
+```{r}
+#install.packages("caret")
+library(caret)
+set.seed(123)  # For reproducibility
+
+# Create a binary column for bankruptcy risk if not already present
+data4_clean3<- data4_clean2 %>%
+  mutate(Bankruptcy_risk_flag = as.factor(ifelse(Bankruptcy_risk_flag, 1, 0)))  # Ensure binary factor
+
+# Split into training (70%) and testing (30%)
+split_index <- createDataPartition(data4_clean2$Bankruptcy_risk_flag, p = 0.7, list = FALSE)
+train_data <- data4_clean2[split_index, ]
+test_data <- data4_clean2[-split_index, ]
+
+# Check dimensions of training and testing sets
+cat("Training set size:", nrow(train_data), "\n")
+cat("Testing set size:", nrow(test_data), "\n")
+
+```
+
+
+####Model1
+```{r}
+# Logistic regression model using the specified variables
+model1 <- glm(
+  Bankruptcy_risk_flag ~ 
+    Debt_Asset + 
+    Gross_profit_margin + 
+    Quarterly_depreciation+
+    Quarterly_cash_holdings+
+    Quarterly_Cost_of_goods_sold +
+    Current_ratio +
+    Sales_Growth_Percentage,  # Return on Equity
+  data = train_data,
+  family = binomial
+)
+summary(model1)
+
+```
+
+```{r}
+library(car)
+vif(model1)
+```
+
+
+##predict testing
+```{r}
+# Predict bankruptcy risk on the test set
+test_data$Predicted_Probability <- predict(model1, newdata = test_data, type = "response")
+
+# Convert probabilities to binary predictions (threshold = 0.5)
+test_data$Predicted_Risk <- ifelse(test_data$Predicted_Probability > 0.5, 1, 0)
+
+# Confusion Matrix
+confusion_matrix <- table(Predicted = test_data$Predicted_Risk, Actual = test_data$Bankruptcy_risk_flag)
+confusion_matrix
+
+```
+
+##Accuracy
+```{r}
+# Calculate model accuracy
+accuracy <- sum(diag(confusion_matrix)) / sum(confusion_matrix)
+cat("Model Accuracy:", accuracy, "\n")
+
+```
+
+#####errorcvhecks
+
+```{r}
+test_data$Bankruptcy_risk_flag <- as.factor(test_data$Bankruptcy_risk_flag)
+levels(test_data$Bankruptcy_risk_flag) <- c("0", "1")  
+```
+
+```{r}
+levels(test_data$Bankruptcy_risk_flag)
+
+```
+
+
+##Roc
+
+```{r}
+
+library(pROC)
+
+# Plot ROC curve
+roc_curve <- roc(as.numeric(as.factor(test_data$Bankruptcy_risk_flag)), test_data$Predicted_Probability)
+plot(roc_curve, main = "ROC Curve")
+auc_value <- auc(roc_curve)
+cat("AUC Value:", auc_value, "\n")
+
+```
+
+
+### Identity Imp features afftecting Bankruptcy
+
+```{r}
+# Display the coefficients of the logistic regression model
+coef_table <- summary(model1)$coefficients
+print(coef_table)
+
+# Sort coefficients by magnitude to identify key predictors
+important_features <- coef_table[order(abs(coef_table[, "Estimate"]), decreasing = TRUE), ]
+important_features
+
+```
+
+#########********Industry Analysis
+
+```{r}
+model2_with_interactions <- glm(
+  Bankruptcy_risk_flag ~ 
+    Debt_Asset * Industry + 
+    Gross_profit_margin * Industry + 
+    Quarterly_depreciation * Industry + 
+    Quarterly_cash_holdings * Industry + 
+    Quarterly_Cost_of_goods_sold * Industry + 
+    Current_ratio * Industry + 
+    Sales_Growth_Percentage * Industry,
+  data = train_data,
+  family = binomial
+)
+
+summary(model2_with_interactions)
+```
+
+```{r}
+# Extract coefficients related to a specific industry (e.g., "Tech")
+coefficients <- summary(model2_with_interactions)$coefficients
+industry_effects <- coefficients[grep("IndustryManufacturing", rownames(coefficients)), ]
+print(industry_effects)
+```
+
+
+
+##predict testing
+```{r}
+# Predict bankruptcy risk on the test set
+test_data$Predicted_Probability2 <- predict(model2_with_interactions, newdata = test_data, type = "response")
+
+# Convert probabilities to binary predictions (threshold = 0.5)
+test_data$Predicted_Risk2 <- ifelse(test_data$Predicted_Probability2 > 0.5, 1, 0)
+
+# Confusion Matrix
+confusion_matrix <- table(Predicted = test_data$Predicted_Risk2, Actual = test_data$Bankruptcy_risk_flag)
+confusion_matrix
+
+```
+
+##Accuracy
+```{r}
+# Calculate model accuracy
+accuracy <- sum(diag(confusion_matrix)) / sum(confusion_matrix)
+cat("Model Accuracy:", accuracy, "\n")
+
+```
+
+```{r}
+
+library(pROC)
+
+# Plot ROC curve
+roc_curve <- roc(as.numeric(as.factor(test_data$Bankruptcy_risk_flag)), test_data$Predicted_Probability2)
+plot(roc_curve, main = "ROC Curve")
+auc_value <- auc(roc_curve)
+cat("AUC Value:", auc_value, "\n")
+
+```
+
+### Model-3
+
+```{r}
+library(xgboost)
+library(caret)
+```
+
+
+```{r}
+set.seed(123) # For reproducibility
+
+# Create a train-test split (80-20)
+train_index <- createDataPartition(train_data$Bankruptcy_risk_flag, p = 0.7, list = FALSE)
+train <- train_data[train_index, ]
+test <- train_data[-train_index, ]
+```
+
+
+```{r}
+# Prepare training data
+train_matrix <- data.matrix(select(train, -Bankruptcy_risk_flag))
+train_labels <- as.numeric(train$Bankruptcy_risk_flag)
+
+# Prepare test data
+test_matrix <- data.matrix(select(test, -Bankruptcy_risk_flag))
+test_labels <- as.numeric(test$Bankruptcy_risk_flag)
+```
+
+
+```{r}
+xgb_model <- xgboost(
+  data = train_matrix,
+  label = train_labels,
+  missing = NA,               # Handle NA values
+  objective = "binary:logistic", # Logistic regression for binary classification
+  nrounds = 100,              # Number of boosting iterations
+  eval_metric = "logloss",    # Evaluation metric
+  max_depth = 6,              # Maximum depth of a tree
+  eta = 0.3,                  # Learning rate
+  verbose = 1                 # Display training progress
+)
+```
+
+
+```{r}
+# Predict probabilities for the test set
+test_predictions <- predict(xgb_model, test_matrix)
+
+# Convert probabilities to binary predictions (threshold = 0.5)
+test_predicted_labels <- ifelse(test_predictions > 0.5, 1, 0)
+
+# Calculate accuracy
+accuracy <- mean(test_predicted_labels == test_labels)
+print(paste("Accuracy:", accuracy))
+```
+
+
+```{r}
+
+```
+
+
+
+
+
